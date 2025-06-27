@@ -1,14 +1,15 @@
-# Playwright_MCP_Explorer
+# Playwright_MCP_Explorer #
 Intelligent Playwright test generation tool using MCP that both autonomously explores websites and generates tests, as well as generates specific scenarios based on the user's verify statements.
 
 
 MCP-Playwright is a revolutionary automated testing framework that combines the power of Model Context Protocol (MCP) with Playwright to generate comprehensive test suites using natural language descriptions and autonomous website exploration.
 
-** Key Features**
--AI-Powered Test Generation - Convert natural language statements into robust Playwright tests
--Autonomous Website Exploration - Automatically discover and test website functionality Natural Language Scenarios - Write tests using simple verify statements
--Smart Selector Generation - Automatically generates resilient, maintainable selectors
--Cross-Browser Testing - Run tests across Chromium, Firefox, and WebKit
+# Key Features #
+-AI-Powered Test Generation: Convert natural language statements into robust Playwright tests<br/>
+-Autonomous Website Exploration-Automatically discover and test website functionality Natural Language Scenarios<br/>
+-Write tests using simple verify statements<br/>
+-Smart Selector Generation-Automatically generates resilient, maintainable selectors<br/>
+-Cross-Browser Testing-Run tests across Chromium, Firefox, and WebKit<br/>
 
 **1. Natural Language Test Generation**
 Write simple verify statements and let AI generate comprehensive tests:
@@ -21,35 +22,26 @@ Node.js 18+
 npm or yarn
 Git
 
-**Installation**
-# Clone the repository
-git clone https://github.com/yourusername/mcp-playwright-suite.git
-cd mcp-playwright-suite
+# Installation #
+**1. Clone the repository**<br/>
+```git clone https://github.com/yourusername/mcp-playwright-suite.git```<br/>
+,```cd mcp-playwright-suite```
 
-# Install dependencies
-npm install
+**2. Install dependencies**<br/>
+```npm install```
 
-# Install Playwright browsers
-npx playwright install --with-deps
+**3. Install Playwright browsers**<br/>
+```npx playwright install --with-deps```
 
-# Build the project
-npm run build
+**4. Build the project**<br/>
+```npm run build```
 
-**Generate Your First Test**
 
-# Generate tests from natural language scenarios
-npm run mcp:generate scenarios
-
-# Explore a website and generate tests automatically
-npm run mcp:generate explore https://playwright.dev "Playwright Website Test"
-
-# Run the generated tests
-npm test
-
-**Usage Examples**
+# Usage Examples #
 Natural Language Test Generation
+
 **1. Edit scenarios in  test-data/scenarios.json:**
-{
+```{
   "scenarios": [
     {
       "id": "login-flow",
@@ -64,47 +56,47 @@ Natural Language Test Generation
     }
   ]
 }
+```
 
-**2. Generate tests:**
-npm run mcp:generate scenarios
+**2. Generate tests:**<br/>
+```npm run mcp:generate scenarios```
 
-**3. Run tests:**
-npm test tests/generated/login-flow.spec.ts
+**3. Run tests:**<br/>
+```npm test tests/generated/login-flow.spec.ts```
 
-**Website Exploration**
-# Explore any website
-npm run mcp:generate explore https://github.com "GitHub Homepage Test"
+**4. Website Exploration**<br/>
+```npm run mcp:generate explore https://github.com "GitHub Homepage Test"```
 
-# Interactive mode for multiple operations
-npm run mcp:generate interactive
+**5. Interactive mode for multiple operations**<br/>
+```npm run mcp:generate interactive```
 
 
-**AI-Powered Features**
+# AI-Powered Features #
 **Smart Natural Language Processing**
-The system understands various types of verify statements:
+The system understands various types of verify statements:<br/>
 
-Presence checks: "is present", "exists", "is visible"
-Text content: "contains", "displays", "shows"
-State checks: "disabled", "enabled", "checked"
-Validation: "shows error", "validation"
+**Presence checks**: "is present", "exists", "is visible"<br/>
+**Text content**: "contains", "displays", "shows"<br/>
+**State checks**: "disabled", "enabled", "checked"<br/>
+**Validation**: "shows error", "validation"<br/>
 
 **Intelligent Selector Generation**
 Automatically maps natural language to robust selectors:
 
-"header" → header, h1, h2, h3, h4, h5, h6
-"navigation menu" → nav, .nav, .navigation, .menu
-"submit button" → button[type="submit"], input[type="submit"]
-"email field" → input[type="email"], input[name*="email"]
+```"header" → header, h1, h2, h3, h4, h5, h6```<br/>
+```"navigation menu" → nav, .nav, .navigation, .menu```<br/>
+```"submit button" → button[type="submit"], input[type="submit"]```<br/>
+```"email field" → input[type="email"], input[name*="email"]```<br/>
 
-**Test Quality Features**
--Resilient Selectors - Prioritizes data-testid, aria-label, and semantic selectors
--Wait Conditions - Automatic handling of dynamic content loading
--Error Handling - Screenshot capture on test failures
--Cross-Browser - Tests run on Chromium, Firefox, and WebKit
--Parallel Execution - Fast test execution with worker processes
+**Test Quality Features**<br/>
+-Resilient Selectors - Prioritizes data-testid, aria-label, and semantic selectors<br/>
+-Wait Conditions - Automatic handling of dynamic content loading<br/>
+-Error Handling - Screenshot capture on test failures<br/>
+-Cross-Browser - Tests run on Chromium, Firefox, and WebKit<br/>
+-Parallel Execution - Fast test execution with worker processes<br/>
 
-**Configuration**
 **MCP Server Configuration ( mcp-config.json)**
+```
 {
   "mcpServers": {
     "filesystem": {
@@ -114,31 +106,36 @@ Automatically maps natural language to robust selectors:
   },
   "testGeneration": {
     "outputDir": "./tests/generated",
+    "defaultTimeout": 30000,
+    "browsers": ["chromium", "firefox", "webkit"]
+  }
+}
+```
 
 **Playwright Configuration**
 Fully configurable through  playwright.config.ts with sensible defaults for:
 
-Multi-browser testing
-Parallel execution
-HTML reporting
-Screenshot and video capture
+-Multi-browser testing<br/>
+-Parallel execution<br/>
+-HTML reporting<br/>
+-Screenshot and video capture<br/>
 
 **Available Commands**
 # Test Generation
-npm run mcp:generate scenarios              # Generate from scenarios file
-npm run mcp:generate explore <url> <name>  # Explore website and generate
-npm run mcp:generate interactive           # Interactive mode
+```npm run mcp:generate scenarios```            # Generate from scenarios file<br/>
+```npm run mcp:generate explore <url> <name>``` # Explore website and generate<br/>
+```npm run mcp:generate interactive```          # Interactive mode<br/>
 
 # Test Execution  
-npm test                                    # Run all tests
-npm run test:headed                         # Run with visible browser
-npm run test:debug                          # Debug mode
-npm run test:ui                            # Playwright UI mode
+```npm test```                                   # Run all tests<br/>
+```npm run test:headed```                        # Run with visible browser<br/>
+```npm run test:debug```                         # Debug mode<br/>
+```npm run test:ui```                            # Playwright UI mode
 
 **Example Generated Test**
 From the verify statement "Verify header is present and contains 'Welcome'":
 
-import { test, expect } from '@playwright/test';
+```import { test, expect } from '@playwright/test';
 
 test.describe('Homepage Verification', () => {
   test.beforeEach(async ({ page }) => {
@@ -146,22 +143,24 @@ test.describe('Homepage Verification', () => {
     await page.waitForLoadState('networkidle');
   });
 
+
   test('Verify header is present and contains \'Welcome\'', async ({ page }) => {
     // Navigate to the target URL
+```
 
-**Contributing**
-I welcome contributions! Please see our Contributing Guide for details.
+# Contributing <br/>
+I welcome contributions! Please see our Contributing Guide for details.<br/>
 
-1. Fork the repository
-2. Create a feature branch (git checkout -b feature/amazing-feature)
-3. Commit your changes (git commit -m 'Add amazing feature')
-4. Push to the branch (git push origin feature/amazing-feature)
-5. Open a Pull Request
+1. Fork the repository<br/>
+2. Create a feature branch (git checkout -b feature/amazing-feature)<br/>
+3. Commit your changes (git commit -m 'Add amazing feature')<br/>
+4. Push to the branch (git push origin feature/amazing-feature)<br/>
+5. Open a Pull Request<br/>
    
-**License**
+# License 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-**Acknowledgments**
-Playwright - For the excellent browser automation framework
-Model Context Protocol - For enabling AI-powered automation
-TypeScript - For type safety and developer experience
+# Acknowledgments <br/>
+-**Playwright** - For the excellent browser automation framework<br/>
+-**Model Context Protocol** - For enabling AI-powered automation<br/>
+-**TypeScript** - For type safety and developer experience<br/>
