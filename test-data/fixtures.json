@@ -1,0 +1,95 @@
+{
+  "users": {
+    "testUser": {
+      "name": "Test User",
+      "email": "test@example.com",
+      "password": "TestPassword123!",
+      "phone": "+1234567890"
+    },
+    "adminUser": {
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "password": "AdminPassword123!",
+      "role": "administrator"
+    }
+  },
+  "products": {
+    "sampleProduct": {
+      "name": "Sample Product",
+      "price": 29.99,
+      "description": "This is a sample product for testing",
+      "category": "Electronics",
+      "sku": "SP-001"
+    }
+  },
+  "forms": {
+    "contactForm": {
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "subject": "Test Inquiry",
+      "message": "This is a test message for automated testing purposes."
+    },
+    "registrationForm": {
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "email": "jane.smith@example.com",
+      "password": "SecurePassword123!",
+      "confirmPassword": "SecurePassword123!",
+      "agreeToTerms": true
+    }
+  },
+  "urls": {
+    "development": {
+      "base": "http://localhost:3000",
+      "api": "http://localhost:3000/api"
+    },
+    "staging": {
+      "base": "https://staging.example.com",
+      "api": "https://staging.example.com/api"
+    },
+    "production": {
+      "base": "https://example.com",
+      "api": "https://api.example.com"
+    }
+  },
+  "selectors": {
+    "common": {
+      "navigation": "nav",
+      "header": "header",
+      "footer": "footer",
+      "mainContent": "main",
+      "sidebar": "aside"
+    },
+    "forms": {
+      "submitButton": "button[type='submit']",
+      "cancelButton": "button[type='button']:has-text('Cancel')",
+      "nameInput": "input[name='name'], input[id='name']",
+      "emailInput": "input[name='email'], input[id='email']",
+      "passwordInput": "input[name='password'], input[id='password']"
+    },
+    "ecommerce": {
+      "addToCartButton": "button:has-text('Add to Cart')",
+      "cartIcon": ".cart-icon, [data-testid='cart']",
+      "checkoutButton": "button:has-text('Checkout')",
+      "productTitle": ".product-title, h1",
+      "productPrice": ".price, .product-price"
+    }
+  },
+  "testData": {
+    "validEmails": [
+      "test@example.com",
+      "user.name@domain.co.uk",
+      "firstname+lastname@example.com"
+    ],
+    "invalidEmails": [
+      "invalid-email",
+      "@example.com",
+      "test@",
+      "test..test@example.com"
+    ],
+    "passwords": {
+      "weak": ["123", "password", "abc"],
+      "strong": ["StrongPass123!", "MySecure@Password2024", "Complex#Pass789"]
+    }
+  }
+}

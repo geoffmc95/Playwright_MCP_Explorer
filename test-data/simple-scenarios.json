@@ -1,0 +1,15 @@
+{
+  "scenarios": [
+    {
+      "id": "simple-homepage-test",
+      "name": "Simple Homepage Test",
+      "description": "Test basic homepage elements",
+      "url": "https://playwright.dev",
+      "verifyStatements": [
+        "Verify header is present",
+        "Verify navigation menu exists",
+        "Verify main heading is visible"
+      ]
+    }
+  ]
+}

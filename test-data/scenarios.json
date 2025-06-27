@@ -1,0 +1,61 @@
+{
+  "scenarios": [
+    {
+      "id": "playwright-homepage-verification",
+      "name": "Playwright Homepage Verification",
+      "description": "Verify key elements on Playwright homepage using natural language statements",
+      "url": "https://playwright.dev",
+      "verifyStatements": [
+        "Verify main heading contains 'Playwright'",
+        "Verify navigation menu is present",
+        "Verify get started button exists",
+        "Verify documentation link is visible"
+      ]
+    },
+    {
+      "id": "github-homepage-verification",
+      "name": "GitHub Homepage Verification",
+      "description": "Verify GitHub homepage elements",
+      "url": "https://github.com",
+      "verifyStatements": [
+        "Verify header is present and contains 'GitHub'",
+        "Verify search box exists",
+        "Verify sign in button is visible",
+        "Verify footer is present"
+      ]
+    },
+    {
+      "id": "todo-app-verification",
+      "name": "Todo App Verification",
+      "description": "Verify todo app interface elements",
+      "url": "https://demo.playwright.dev/todomvc",
+      "verifyStatements": [
+        "Verify main heading contains 'todos'",
+        "Verify input field is present for adding todos",
+        "Verify footer contains filter options"
+      ]
+    },
+    {
+      "id": "basic-navigation-traditional",
+      "name": "Basic Website Navigation (Traditional)",
+      "description": "Test basic navigation functionality using traditional steps",
+      "url": "https://demo.playwright.dev/todomvc",
+      "steps": [
+        {
+          "action": "navigate",
+          "target": "/"
+        },
+        {
+          "action": "fill",
+          "target": "input[placeholder='What needs to be done?']",
+          "value": "Test todo item"
+        },
+        {
+          "action": "verify",
+          "target": ".todo-list",
+          "expected": "Test todo item"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "scenarios": [
+    {
+      "id": "testautomation-practice-verification",
+      "name": "Test Automation Practice Site Verification",
+      "description": "Verify key elements and functionality on the test automation practice website",
+      "url": "https://testautomationpractice.blogspot.com/",
+      "verifyStatements": [
+        "Verify header is present and contains 'Automation Testing Practice'",
+        "Verify name input field exists",
+        "Verify email input field exists", 
+        "Verify phone input field exists",
+        "Verify address textarea is visible",
+        "Verify gender radio buttons are present",
+        "Verify country dropdown exists",
+        "Verify submit button is visible",
+        "Verify Wikipedia search box is present",
+        "Verify GUI elements section is visible"
+      ]
+    },
+    {
+      "id": "testautomation-form-interaction",
+      "name": "Test Automation Practice Form Interaction",
+      "description": "Test form interactions and validations",
+      "url": "https://testautomationpractice.blogspot.com/",
+      "verifyStatements": [
+        "Verify form can be filled with valid data",
+        "Verify gender selection works correctly",
+        "Verify country dropdown selection works",
+        "Verify checkboxes can be selected",
+        "Verify Wikipedia search functionality works",
+        "Verify date picker is functional",
+        "Verify file upload field exists"
+      ]
+    },
+    {
+      "id": "testautomation-gui-elements",
+      "name": "Test Automation Practice GUI Elements",
+      "description": "Test various GUI elements and interactions",
+      "url": "https://testautomationpractice.blogspot.com/",
+      "verifyStatements": [
+        "Verify alert button triggers alert dialog",
+        "Verify confirm button shows confirmation dialog",
+        "Verify prompt button shows prompt dialog",
+        "Verify double click button works",
+        "Verify drag and drop functionality",
+        "Verify slider element is interactive",
+        "Verify tabs functionality works",
+        "Verify table data is displayed correctly"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "./tests", "./test-data"]
+    }
+  },
+  "testGeneration": {
+    "outputDir": "./tests/generated",
+    "templateDir": "./test-templates",
+    "defaultTimeout": 30000,
+    "browsers": ["chromium", "firefox", "webkit"],
+    "viewports": [
+      { "name": "desktop", "width": 1920, "height": 1080 },
+      { "name": "tablet", "width": 768, "height": 1024 },
+      { "name": "mobile", "width": 375, "height": 667 }
+    ]
+  },
+  "automation": {
+    "enabled": true,
+    "schedules": {
+      "daily": "0 2 * * *",
+      "weekly": "0 2 * * 0"
+    },
+    "notifications": {
+      "slack": {
+        "enabled": false,
+        "webhook": ""
+      },
+      "email": {
+        "enabled": false,
+        "recipients": []
+      }
+    }
+  }
+}

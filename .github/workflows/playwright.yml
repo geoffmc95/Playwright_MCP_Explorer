@@ -1,0 +1,103 @@
+name: MCP-Playwright Automated Tests
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Test mode"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - generated
+          - scenarios
+          - explore
+      target_url:
+        description: "Target URL for exploration (if explore mode)"
+        required: false
+        type: string
+
+jobs:
+  generate-tests:
+    name: Generate Tests with MCP
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.test_mode == 'generated' || github.event.inputs.test_mode == 'scenarios' || github.event.inputs.test_mode == 'explore'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Generate tests from scenarios
+        if: github.event.inputs.test_mode == 'scenarios' || github.event.inputs.test_mode == 'generated' || github.event_name == 'schedule'
+        run: node scripts/generate-tests.js scenarios
+
+      - name: Explore website and generate tests
+        if: github.event.inputs.test_mode == 'explore' && github.event.inputs.target_url != ''
+        run: node scripts/generate-tests.js explore "${{ github.event.inputs.target_url }}" "Automated Exploration Test"
+
+      - name: Upload generated tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-tests
+          path: tests/generated/
+          retention-days: 7
+
+  test:
+    name: Run Playwright Tests
+    runs-on: ubuntu-latest
+    needs: [generate-tests]
+    if: always()
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Download generated tests
+        if: needs.generate-tests.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-tests
+          path: tests/generated/
+
+      - name: Run Playwright tests
+        run: npx playwright test --project=${{ matrix.browser }}
+        env:
+          CI: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload test screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshots-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 7
