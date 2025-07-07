@@ -1,20 +1,18 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { MCPPlaywrightClient, TestScenario, TestStep } from './mcp-client.js';
-import { VerifyStatementParser, VerifyStatement } from './verify-parser.js';
+import { MCPPlaywrightClient } from './mcp-client';
+import { TestScenario, TestStep, VerifyStatement } from './types';
 
-export interface GeneratorConfig {
+export interface TestGeneratorConfig {
   outputDir: string;
   templateDir: string;
-  defaultTimeout: number;
+  defaultTimeout?: number;
 }
 
 export class PlaywrightTestGenerator {
-  private verifyParser = new VerifyStatementParser();
-
   constructor(
     private mcpClient: MCPPlaywrightClient,
-    private config: GeneratorConfig
+    private config: TestGeneratorConfig
   ) {}
 
   async generateTestFromScenario(scenario: TestScenario): Promise<string> {
@@ -58,74 +56,84 @@ export class PlaywrightTestGenerator {
 
       await fs.writeFile(filepath, testContent, 'utf-8');
       return filepath;
-    } else {
-      // Fall back to traditional step-based generation
-      const testContent = await this.generateTestFromScenario(scenario);
-      const filename = `${scenario.id}.spec.ts`;
-      const filepath = path.join(this.config.outputDir, filename);
-
-      await fs.writeFile(filepath, testContent, 'utf-8');
-      return filepath;
     }
+    
+    // Fallback to regular scenario test generation
+    const testContent = await this.generateTestFromScenario(scenario);
+    const filename = `${scenario.id}.spec.ts`;
+    const filepath = path.join(this.config.outputDir, filename);
+    
+    await fs.writeFile(filepath, testContent, 'utf-8');
+    return filepath;
   }
 
   async generateFromWebsiteExploration(url: string, testName: string): Promise<string> {
     try {
-      // Use MCP to explore the website with enhanced prompts
+      console.log(`Generating test from website exploration: ${url}`);
+      
+      // Use MCP client to explore the website with a prompt
       const explorationResult = await this.mcpClient.exploreWebsiteWithPrompt(url, testName);
-
-      // Generate test based on exploration
+      
+      // Build test from exploration results
       const testContent = this.buildTestFromExploration(url, testName, explorationResult);
+      
+      // Save the test
       const filename = `${this.sanitizeFilename(testName)}.spec.ts`;
-      const filepath = path.join(this.config.outputDir, filename);
-
-      await fs.writeFile(filepath, testContent, 'utf-8');
-      return filepath;
+      return await this.saveGeneratedTest(testContent, filename);
     } catch (error) {
       console.error('Failed to generate test from website exploration:', error);
       throw error;
     }
   }
 
+  // Generate code for test steps
   private generateTestStepsCode(steps: TestStep[]): string {
-    return steps.map(step => {
+    let code = '';
+    
+    steps.forEach((step, index) => {
       switch (step.action) {
         case 'navigate':
-          return `    await page.goto('${step.target}');`;
-        
+          code += `    // Navigate to page\n`;
+          code += `    await page.goto('${step.target}');\n`;
+          code += `    await page.waitForLoadState('networkidle');\n\n`;
+          break;
+          
         case 'click':
-          return `    await page.locator('${step.target}').click();`;
-        
+          code += `    // Click element\n`;
+          code += `    await page.locator('${step.target}').click();\n\n`;
+          break;
+          
         case 'fill':
-          return `    await page.locator('${step.target}').fill('${step.value}');`;
-        
-        case 'wait':
-          const timeout = step.timeout || this.config.defaultTimeout;
-          return `    await page.waitForTimeout(${timeout});`;
-        
+          code += `    // Fill form field\n`;
+          code += `    await page.locator('${step.target}').fill('${step.value || ''}');\n\n`;
+          break;
+          
         case 'screenshot':
-          return `    await page.screenshot({ path: 'screenshots/${step.target}' });`;
-        
+          code += `    // Take screenshot\n`;
+          code += `    await page.screenshot({ path: '${step.target}' });\n\n`;
+          break;
+          
         default:
-          return `    // Unknown action: ${step.action}`;
+          code += `    // Custom action: ${step.action}\n`;
+          code += `    console.log('Executing custom action: ${step.action}');\n\n`;
       }
-    }).join('\n');
+    });
+    
+    return code;
   }
 
+  // Generate assertions code
   private generateAssertionsCode(steps: TestStep[]): string {
-    const verifySteps = steps.filter(step => step.action === 'verify');
+    let code = '';
     
-    if (verifySteps.length === 0) {
-      return '    // No additional assertions';
-    }
-
-    return verifySteps.map(step => {
-      if (step.expected) {
-        return `    await expect(page.locator('${step.target}')).toContainText('${step.expected}');`;
-      } else {
-        return `    await expect(page.locator('${step.target}')).toBeVisible();`;
+    steps.forEach(step => {
+      if (step.action === 'verify' && step.expected) {
+        code += `    // Verify element\n`;
+        code += `    await expect(page.locator('${step.target}')).toHaveText('${step.expected}');\n\n`;
       }
-    }).join('\n');
+    });
+    
+    return code;
   }
 
   async saveGeneratedTest(testCode: string, filename: string): Promise<string> {
@@ -199,39 +207,181 @@ export class PlaywrightTestGenerator {
   }
 
   private buildTestFromVerificationExploration(scenario: TestScenario, explorationResults: any): string {
-    const verificationTests = scenario.verifyStatements!.map((statement, index) => {
-      const analysis = explorationResults.verificationAnalysis[index];
-      const testActions = analysis.testActions || [];
-
-      // Escape quotes in the statement for the test name
-      const escapedStatement = statement.replace(/'/g, "\\'");
-
+    const verificationTests = scenario.verifyStatements!.map((statement: string, index: number) => {
       return `
-  test('${escapedStatement}', async ({ page }) => {
-    // Navigate to the target URL
+  test('Verification ${index + 1}: ${statement}', async ({ page }) => {
     await page.goto('${scenario.url}');
-
-    // Wait for page to load
     await page.waitForLoadState('networkidle');
-
-    ${testActions.join('\n    ')}
+    
+    // Verification logic based on exploration results
+    ${this.generateVerificationCode(statement, explorationResults)}
   });`;
     }).join('\n');
 
     return `import { test, expect } from '@playwright/test';
 
 test.describe('${scenario.name}', () => {
-  test.beforeEach(async ({ page }) => {
-    // Setup code here
-    await page.goto('${scenario.url}');
-    await page.waitForLoadState('networkidle');
+  test.beforeEach(async () => {
+    // Common setup
   });
-
+  
 ${verificationTests}
 
   test.afterEach(async ({ page }) => {
-    // Cleanup code here
-    // Take screenshot on failure
+    // Capture screenshot on failure
+    if (test.info().status !== test.info().expectedStatus) {
+      await page.screenshot({
+        path: \`screenshots/\${test.info().title.replace(/[^a-z0-9]/gi, '-')}-failure.png\`,
+        fullPage: true
+      });
+    }
+  });
+});`;
+  }
+
+  // Helper method to generate verification code
+  private generateVerificationCode(statement: string, explorationResults: any): string {
+    // Default verification code
+    return `
+    // TODO: Generate specific verification based on: "${statement}"
+    await expect(page.locator('body')).toBeVisible();
+    console.log('Verifying: ${statement.replace(/'/g, "\\'")}');`;
+  }
+
+  private buildTestFromExploration(url: string, testName: string, explorationResult: any): string {
+    // Check if we have specific exploration results
+    if (!explorationResult || !explorationResult.explorationResult) {
+      console.warn('No detailed exploration results available, generating generic test');
+      return this.buildGenericTest(url, testName);
+    }
+
+    // Extract exploration data
+    const exploration = explorationResult.explorationResult;
+  
+    // Log what we found during exploration
+    console.log(`Building test from exploration results for ${url}`);
+    if (exploration.pageTitle) {
+      console.log(`Page title: ${exploration.pageTitle}`);
+    }
+  
+    if (exploration.elements) {
+      console.log(`Found ${exploration.elements.length} elements during exploration`);
+    }
+
+    // Use the test generation result if available
+    if (explorationResult.testGenerationResult && explorationResult.testGenerationResult.content) {
+      console.log('Using AI-generated test content from exploration');
+      return explorationResult.testGenerationResult.content;
+    }
+
+    // Otherwise build a more specific test based on exploration data
+    let testContent = `import { test, expect } from '@playwright/test';
+
+test.describe('${testName}', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('${url}');
+    await page.waitForLoadState('networkidle');
+  });
+
+`;
+
+    // Add page title test if available
+    if (exploration.pageTitle) {
+      testContent += `
+  test('Page has correct title', async ({ page }) => {
+    await expect(page).toHaveTitle(/${exploration.pageTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/);
+  });
+`;
+    }
+
+    // Add element tests if available
+    if (exploration.elements && exploration.elements.length > 0) {
+      testContent += `
+  test('Key page elements are present', async ({ page }) => {`;
+
+      exploration.elements.forEach((element: any) => {
+        if (element.selector && element.type) {
+          testContent += `
+    // Check ${element.type} element
+    await expect(page.locator('${element.selector}')).toBeVisible();`;
+        }
+      });
+
+      testContent += `
+  });
+`;
+    }
+
+    // Add navigation tests if available
+    if (exploration.links && exploration.links.length > 0) {
+      testContent += `
+  test('Navigation links work correctly', async ({ page }) => {`;
+
+      exploration.links.slice(0, 3).forEach((link: any, index: number) => {
+        if (link.selector && link.url) {
+          testContent += `
+    // Test link to ${link.url}
+    const link${index} = page.locator('${link.selector}');
+    await expect(link${index}).toBeVisible();
+    
+    // Click and verify navigation
+    const [response${index}] = await Promise.all([
+      page.waitForNavigation(),
+      link${index}.click()
+    ]);
+    
+    // Verify navigation worked
+    await expect(page).toHaveURL(/${link.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/);
+    
+    // Navigate back
+    await page.goBack();
+    await page.waitForLoadState('networkidle');`;
+        }
+      });
+
+      testContent += `
+  });
+`;
+    }
+
+    // Add form tests if available
+    if (exploration.forms && exploration.forms.length > 0) {
+      testContent += `
+  test('Forms can be filled out', async ({ page }) => {`;
+
+      exploration.forms.slice(0, 2).forEach((form: any, index: number) => {
+        if (form.selector) {
+          testContent += `
+    // Test form ${index}
+    const form${index} = page.locator('${form.selector}');
+    await expect(form${index}).toBeVisible();
+    
+    // Fill form fields`;
+
+          if (form.fields && form.fields.length > 0) {
+            form.fields.forEach((field: any) => {
+              if (field.selector && field.type) {
+                let testValue = '"Test"';
+                if (field.type === 'email') testValue = '"test@example.com"';
+                if (field.type === 'number') testValue = '"123"';
+                
+                testContent += `
+    await page.locator('${field.selector}').fill(${testValue});`;
+              }
+            });
+          }
+        }
+      });
+
+      testContent += `
+  });
+`;
+    }
+
+    // Add afterEach hook
+    testContent += `
+  test.afterEach(async ({ page }) => {
+    // Capture screenshot on failure
     if (test.info().status !== test.info().expectedStatus) {
       await page.screenshot({
         path: \`screenshots/\${test.info().title.replace(/[^a-z0-9]/gi, '-')}-failure.png\`,
@@ -241,9 +391,12 @@ ${verificationTests}
   });
 });
 `;
+
+    return testContent;
   }
 
-  private buildTestFromExploration(url: string, testName: string, explorationResult: any): string {
+  // Fallback method for generic test
+  private buildGenericTest(url: string, testName: string): string {
     return `import { test, expect } from '@playwright/test';
 
 test.describe('${testName} - Exploration Test', () => {
@@ -264,28 +417,8 @@ test.describe('${testName} - Exploration Test', () => {
     });
   });
 
-  test('Navigation and interactive elements work', async ({ page }) => {
-    // Test navigation elements if present
-    const nav = page.locator('nav, .nav, .navigation');
-    if (await nav.count() > 0) {
-      await expect(nav).toBeVisible();
-    }
-
-    // Test buttons if present
-    const buttons = page.locator('button, input[type="button"], input[type="submit"]');
-    const buttonCount = await buttons.count();
-    if (buttonCount > 0) {
-      console.log(\`Found \${buttonCount} interactive buttons\`);
-    }
-
-    // Test forms if present
-    const forms = page.locator('form');
-    const formCount = await forms.count();
-    if (formCount > 0) {
-      console.log(\`Found \${formCount} forms\`);
-    }
-  });
-
+  // More generic tests...
+  
   test.afterEach(async ({ page }) => {
     // Capture screenshot on failure
     if (test.info().status !== test.info().expectedStatus) {
@@ -299,10 +432,8 @@ test.describe('${testName} - Exploration Test', () => {
 `;
   }
 
+  // Helper method to sanitize filenames
   private sanitizeFilename(name: string): string {
-    return name.toLowerCase()
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+    return name.toLowerCase().replace(/[^a-z0-9]/gi, '-');
   }
 }

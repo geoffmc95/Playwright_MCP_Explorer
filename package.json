@@ -14,7 +14,8 @@
     "dev": "npm run mcp:start",
     "build": "tsc",
     "clean": "rimraf dist playwright-report test-results",
-    "setup": "npm install && npm run test:install"
+    "setup": "npm install && npm run test:install",
+    "pretest": "npm run build"
   },
   "keywords": [
     "playwright",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@playwright/test": "^1.53.1",
     "@types/node": "^24.0.4",
+    "@types/react": "^19.1.8",
     "mcp": "^1.4.2"
   },
   "dependencies": {

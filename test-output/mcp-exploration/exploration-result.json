@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Error: Unknown tool: playwright_navigate"
+    }
+  ],
+  "isError": true
+}

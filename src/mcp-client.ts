@@ -2,6 +2,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { VerifyStatementParser, VerifyStatement } from './verify-parser.js';
 import { PromptLoader } from './prompt-loader.js';
+// Import the types at the top of the file
+import { TestScenario, TestStep } from './types';
 
 export interface MCPConfig {
   command: string;
@@ -9,28 +11,11 @@ export interface MCPConfig {
   env?: Record<string, string>;
 }
 
-export interface TestScenario {
-  id: string;
-  name: string;
-  description: string;
-  url: string;
-  steps?: TestStep[];
-  verifyStatements?: string[];
-}
-
-export interface TestStep {
-  action: 'navigate' | 'click' | 'fill' | 'verify' | 'wait' | 'screenshot';
-  target: string;
-  value?: string;
-  expected?: string;
-  timeout?: number;
-}
-
 export class MCPPlaywrightClient {
   private client: Client | null = null;
   private transport: StdioClientTransport | null = null;
   private verifyParser = new VerifyStatementParser();
-  private promptLoader = new PromptLoader();
+  public promptLoader = new PromptLoader();
 
   constructor(private config: MCPConfig) {}
 
@@ -72,13 +57,24 @@ export class MCPPlaywrightClient {
     if (!this.client) {
       throw new Error('MCP client not connected');
     }
-
+    
     try {
+      // Use the correct tool name - 'playwright' instead of 'playwright_navigate'
       const result = await this.client.callTool({
-        name: 'playwright_navigate',
-        arguments: { url }
+        name: 'playwright',
+        arguments: { 
+          action: 'navigate',
+          url: url,
+          options: {
+            headless: true,
+            timeout: 30000,
+            waitForSelector: 'body',
+            captureScreenshot: true,
+            captureHtml: true
+          }
+        }
       });
-
+      
       return result;
     } catch (error) {
       console.error('Failed to explore website:', error);
@@ -109,16 +105,29 @@ export class MCPPlaywrightClient {
   }
 
   async capturePageInfo(url: string): Promise<any> {
-    if (!this.client) {
-      throw new Error('MCP client not connected');
-    }
-
     try {
+      // Check if client is null
+      if (!this.client) {
+        throw new Error('MCP client not connected');
+      }
+
+      console.log(`Capturing page info for ${url}...`);
+
+      // Use Playwright to capture basic page information
       const result = await this.client.callTool({
-        name: 'playwright_capture_page_info',
-        arguments: { url }
+        name: 'playwright',
+        arguments: {
+          action: 'capture_info',
+          url: url,
+          options: {
+            headless: true,
+            timeout: 30000,
+            waitForSelector: 'body'
+          }
+        }
       });
 
+      console.log(`Page info captured.`);
       return result;
     } catch (error) {
       console.error('Failed to capture page info:', error);
@@ -127,25 +136,35 @@ export class MCPPlaywrightClient {
   }
 
   async exploreWebsiteForVerification(url: string, verifyStatements: string[]): Promise<any> {
-    if (!this.client) {
-      throw new Error('MCP client not connected');
-    }
-
     try {
-      // Analyze each verify statement
-      const explorationResults = [];
-
-      for (const statement of verifyStatements) {
-        const result = await this.analyzeVerifyStatement(url, statement);
-        explorationResults.push(result);
+      // Check if client is null
+      if (!this.client) {
+        throw new Error('MCP client not connected');
       }
 
-      return {
-        url,
-        verificationAnalysis: explorationResults
-      };
+      console.log(`Starting verification exploration of ${url} with ${verifyStatements.length} statements...`);
+
+      // Use Playwright to explore the website with verification statements
+      const result = await this.client.callTool({
+        name: 'playwright',
+        arguments: {
+          action: 'verify_explore',
+          url: url,
+          statements: verifyStatements,
+          options: {
+            headless: true,
+            timeout: 60000,
+            waitForSelector: 'body',
+            captureScreenshot: true,
+            captureHtml: true
+          }
+        }
+      });
+
+      console.log(`Verification exploration completed.`);
+      return result;
     } catch (error) {
-      console.error('Failed to explore website for verification:', error);
+      console.error('Failed to explore website with verification statements:', error);
       throw error;
     }
   }
@@ -173,19 +192,42 @@ export class MCPPlaywrightClient {
     try {
       // Load the exploration prompt
       const prompt = await this.promptLoader.loadPrompt('explore_and_generate');
-
-      // Process the prompt template with variables
+      
+      // Process the prompt template with the URL and test name
       const processedPrompt = this.promptLoader.processPromptTemplate(prompt.content, {
         URL: url,
         TestSuiteName: testName
       });
-
-      // Use MCP to analyze the website with the prompt
+      
+      console.log(`Starting exploration of ${url} with prompt...`);
+      
+      // First, use Playwright to actually explore the website
       const result = await this.client.callTool({
-        name: 'write_file',
+        name: 'playwright',
         arguments: {
-          path: 'temp-exploration-prompt.md',
-          content: processedPrompt
+          action: 'explore',
+          url: url,
+          prompt: processedPrompt,
+          options: {
+            headless: true,
+            timeout: 60000,
+            waitForSelector: 'body',
+            captureScreenshot: true,
+            captureHtml: true
+          }
+        }
+      });
+
+      console.log(`Exploration completed. Generating tests based on exploration results...`);
+
+      // No need to check again since we already checked above
+      const testGenerationResult = await this.client.callTool({
+        name: 'generate_test',
+        arguments: {
+          url: url,
+          testName: testName,
+          explorationResults: result,
+          prompt: processedPrompt
         }
       });
 
@@ -193,7 +235,8 @@ export class MCPPlaywrightClient {
         url,
         testName,
         prompt: processedPrompt,
-        explorationResult: result
+        explorationResult: result,
+        testGenerationResult: testGenerationResult
       };
     } catch (error) {
       console.error('Failed to explore website with prompt:', error);
