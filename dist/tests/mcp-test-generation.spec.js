@@ -89,7 +89,7 @@ const TEST_CONFIG = {
             console.log('Screenshot taken for comparison');
         }
         catch (runError) {
-            console.log('Could not run the generated test:', runError.message);
+            console.log('Could not run the generated test:', runError instanceof Error ? runError.message : String(runError));
         }
     }
     finally {

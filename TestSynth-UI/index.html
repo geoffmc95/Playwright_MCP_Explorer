@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TestSynth MCP Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">TS</span>
+                </div>
+                <h1 class="text-xl font-bold text-gray-900">TestSynth MCP Explorer</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Hero Section -->
+        <div class="text-center space-y-4 mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">
+                Generate Intelligent Playwright Tests
+            </h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Explore websites with MCP to create specific, meaningful tests, or build tests from natural language scenarios.
+            </p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
+            <button id="exploreTab" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors bg-white text-blue-600 shadow-sm">
+                🔍 Generate Explore
+            </button>
+            <button id="scenarioTab" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors text-gray-600 hover:text-gray-900">
+                📝 Generate From Scenario
+            </button>
+        </div>
+
+        <!-- Explore Section -->
+        <div id="exploreSection" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-900">Generate Explore</h2>
+                </div>
+                <p class="text-gray-600 mb-4">
+                    Enter a website URL and let MCP explore it to generate specific tests based on actual page content.
+                </p>
+                
+                <form id="exploreForm" class="space-y-4">
+                    <div>
+                        <label for="url" class="block text-sm font-medium text-gray-700 mb-1">
+                            Website URL *
+                        </label>
+                        <input
+                            type="url"
+                            id="url"
+                            placeholder="https://example.com"
+                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+                            required
+                        />
+                        <div id="urlError" class="mt-1 text-sm text-red-600 hidden"></div>
+                    </div>
+                    
+                    <div>
+                        <label for="testName" class="block text-sm font-medium text-gray-700 mb-1">
+                            Test Name (optional)
+                        </label>
+                        <input
+                            type="text"
+                            id="testName"
+                            placeholder="Homepage Test"
+                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                            If empty, will auto-generate based on the URL
+                        </p>
+                    </div>
+                    
+                    <button
+                        type="submit"
+                        id="exploreBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <span>Generate Explore</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Scenario Section -->
+        <div id="scenarioSection" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 hidden">
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-900">Generate From Scenario</h2>
+                </div>
+                <p class="text-gray-600 mb-4">
+                    Write test requirements in natural language and get working Playwright tests.
+                </p>
+                
+                <form id="scenarioForm" class="space-y-4">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="scenarioTestName" class="block text-sm font-medium text-gray-700 mb-1">
+                                Test Name *
+                            </label>
+                            <input
+                                type="text"
+                                id="scenarioTestName"
+                                placeholder="Login Flow Test"
+                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label for="scenarioUrl" class="block text-sm font-medium text-gray-700 mb-1">
+                                Website URL *
+                            </label>
+                            <input
+                                type="url"
+                                id="scenarioUrl"
+                                placeholder="https://example.com/login"
+                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+                                required
+                            />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="scenarioDescription" class="block text-sm font-medium text-gray-700 mb-1">
+                            Description (optional)
+                        </label>
+                        <textarea
+                            id="scenarioDescription"
+                            placeholder="Test the user login functionality..."
+                            rows="3"
+                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+                        ></textarea>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Verify Statements *
+                            </label>
+                            <button
+                                type="button"
+                                id="addStatement"
+                                class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-1 px-3 rounded text-sm transition-colors"
+                            >
+                                Add Statement
+                            </button>
+                        </div>
+                        
+                        <div id="verifyStatements" class="space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <input
+                                    type="text"
+                                    placeholder="Verify statement 1 (e.g., &quot;Verify login button exists&quot;)"
+                                    class="flex-1 block rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 text-sm text-gray-500">
+                            <strong>Examples:</strong>
+                            <ul class="mt-1 space-y-1">
+                                <li>• "Verify header is present and contains 'Welcome'"</li>
+                                <li>• "Verify login button exists and is clickable"</li>
+                                <li>• "Verify email field accepts valid input"</li>
+                                <li>• "Verify form validation shows error for empty fields"</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <button
+                        type="submit"
+                        id="scenarioBtn"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span>Generate From Scenario</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hidden">
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Generated Test</h3>
+                    <div class="flex space-x-2">
+                        <button
+                            id="copyBtn"
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Copy</span>
+                        </button>
+                        <button
+                            id="downloadBtn"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span>Download</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                    <pre id="testCode" class="text-sm text-gray-100 whitespace-pre-wrap"></pre>
+                </div>
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                            <h4 class="text-sm font-medium text-blue-900">Next Steps</h4>
+                            <p class="text-sm text-blue-700 mt-1">
+                                Save this test to your <code class="bg-blue-100 px-1 rounded">tests/generated/</code> directory and run it with:
+                            </p>
+                            <code class="block bg-blue-100 text-blue-800 px-2 py-1 rounded mt-2 text-xs">
+                                npx playwright test tests/generated/your-test.spec.ts
+                            </code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Section -->
+        <div id="loadingSection" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hidden">
+            <div class="flex items-center justify-center space-x-3 py-8">
+                <div class="loading-spinner"></div>
+                <div class="text-center">
+                    <h3 class="text-lg font-medium text-gray-900">Generating Test...</h3>
+                    <p class="text-gray-600 mt-1">MCP is exploring the website and analyzing page structure</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

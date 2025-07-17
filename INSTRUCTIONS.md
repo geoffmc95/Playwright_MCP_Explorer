@@ -1,231 +1,149 @@
-# MCP-Playwright Test Generation Instructions
+# TestSynth MCP Explorer
 
-## Overview
+Generate intelligent Playwright tests by exploring websites or writing natural language scenarios.
 
-This project provides automated test generation using Model Context Protocol (MCP) and Playwright. You can generate tests in two ways:
+## Quick Start
 
-1. **Specific test cases** using natural language verify statements
-2. **Automatic exploration** of webpages to generate comprehensive tests
-
----
-
-## Scenario 1: Generate Specific Test Cases Using Natural Language Verify Statements
-
-### Quick Command
-
+**Explore any website and generate tests:**
 ```bash
-npm run mcp:generate scenarios
+node scripts/generate-tests.js explore https://example.com "My Test"
 ```
 
-### Step-by-Step Process
+**Generate tests from scenarios:**
+```bash
+node scripts/generate-tests.js scenarios
+```
 
-1. **Edit your scenarios file** (`test-data/scenarios.json`):
+## How It Works
 
+### 🔍 Website Exploration
+The MCP (Model Context Protocol) actually visits your website, analyzes the page structure, and creates specific tests based on what it finds - not generic templates.
+
+**Example:** Exploring `https://playwright.dev` generates tests for:
+- Specific headings: "Playwright enables reliable end-to-end testing"
+- Real buttons: "Get started", "Search"
+- Actual links: "TypeScript", "JavaScript", "Python"
+
+### 📝 Scenario-Based Testing
+Write what you want to test in plain English, and get working Playwright code.
+
+**Create scenarios in `test-data/scenarios.json`:**
 ```json
 {
   "scenarios": [
     {
-      "id": "my-custom-test",
-      "name": "My Custom Test",
-      "description": "Test specific functionality I want to verify",
-      "url": "https://example.com",
+      "id": "login-flow",
+      "name": "User Login Flow",
+      "url": "https://myapp.com/login",
       "verifyStatements": [
-        "Verify header is present and contains 'Welcome'",
-        "Verify login button exists",
-        "Verify contact form is visible",
-        "Verify footer contains copyright text"
+        "Verify login form is visible",
+        "Verify email field accepts input",
+        "Verify password field is secure",
+        "Verify submit button becomes enabled"
       ]
     }
   ]
 }
 ```
 
-2. **Run the generation command**:
+## Commands
 
+### Explore Websites
 ```bash
-npm run mcp:generate scenarios
+# Basic exploration
+node scripts/generate-tests.js explore https://playwright.dev "Homepage Test"
+
+# Complex sites work too
+node scripts/generate-tests.js explore https://github.com "GitHub Test"
 ```
 
-3. **Run your generated tests**:
-
+### Generate from Scenarios
 ```bash
-npm test tests/generated/my-custom-test.spec.ts
+# Uses test-data/scenarios.json
+node scripts/generate-tests.js scenarios
 ```
 
-### Natural Language Examples You Can Use:
-
-- `"Verify header is present"`
-- `"Verify navigation menu exists"`
-- `"Verify main heading contains 'Welcome'"`
-- `"Verify submit button is disabled"`
-- `"Verify email field validation shows error for invalid email"`
-- `"Verify search box is visible"`
-- `"Verify footer is present"`
-
----
-
-## Scenario 2: Explore Webpage and Auto-Generate Test Cases
-
-### Quick Command
-
+### Run Generated Tests
 ```bash
-npm run mcp:generate explore <URL> "<Test Name>"
+# Run all generated tests
+npx playwright test tests/generated/
+
+# Run specific test
+npx playwright test tests/generated/homepage-test.spec.ts
+
+# Debug mode (browser visible)
+npx playwright test tests/generated/homepage-test.spec.ts --headed
 ```
 
-### Examples
+## What Makes This Different
 
-**Explore a website and generate basic tests:**
+Unlike other test generators that create generic templates, this system:
 
-```bash
-npm run mcp:generate explore https://playwright.dev "Playwright Homepage Test"
+✅ **Actually visits your website** using a real browser
+✅ **Finds specific elements** like buttons, forms, and text content
+✅ **Generates meaningful assertions** based on what's actually there
+✅ **Creates working tests** that you can run immediately
+
+## Example Output
+
+When you explore `https://example.com`, you get tests like:
+
+```typescript
+test('Page headings are present and contain expected text', async ({ page }) => {
+  await expect(page.locator('h1')).toBeVisible();
+  await expect(page.locator('h1')).toContainText('Example Domain');
+});
+
+test('Links are present and accessible', async ({ page }) => {
+  await expect(page.locator('a:has-text("More information...")')).toBeVisible();
+  await expect(page.locator('a:has-text("More information...")')).toContainText('More information...');
+});
 ```
 
-**Explore an e-commerce site:**
+## Writing Good Verify Statements
 
-```bash
-npm run mcp:generate explore https://demo.playwright.dev/todomvc "Todo App Test"
-```
+**Be specific:**
+- ✅ `"Verify login button exists"`
+- ❌ `"Verify button exists"`
 
-**Explore a form-heavy site:**
+**Include expected content:**
+- ✅ `"Verify header contains 'Welcome'"`
+- ❌ `"Verify header is present"`
 
-```bash
-npm run mcp:generate explore https://example.com/contact "Contact Form Test"
-```
-
-### What This Does:
-
-1. **Connects to MCP server** to analyze the webpage
-2. **Captures page structure** and identifies key elements
-3. **Generates comprehensive test** with:
-   - Basic navigation verification
-   - Element visibility checks
-   - Page title validation
-   - Screenshot capture
-   - Error handling
-
----
-
-## Interactive Mode (Advanced)
-
-For more control, use interactive mode:
-
-```bash
-npm run mcp:generate interactive
-```
-
-**Available commands in interactive mode:**
-
-- `explore <url> [testName]` - Explore and generate tests
-- `scenarios` - Generate from scenarios file
-- `list` - Show generated test files
-- `clean` - Remove generated test files
-- `help` - Show help
-- `exit` - Exit interactive mode
-
----
-
-## Running Your Generated Tests
-
-**Run all generated tests:**
-
-```bash
-npm test tests/generated/
-```
-
-**Run specific test:**
-
-```bash
-npm test tests/generated/your-test-name.spec.ts
-```
-
-**Run with browser visible:**
-
-```bash
-npm run test:headed tests/generated/your-test-name.spec.ts
-```
-
-**Debug mode:**
-
-```bash
-npm run test:debug tests/generated/your-test-name.spec.ts
-```
-
----
-
-## Tips for Best Results
-
-### For Verify Statements:
-
-- Be specific about elements: `"Verify login button exists"` vs `"Verify button exists"`
-- Include expected text: `"Verify header contains 'Welcome'"`
-- Use common web elements: header, navigation, form, button, link, etc.
-
-### For Website Exploration:
-
-- Use URLs with rich content for better test generation
-- Public demo sites work well (like demo.playwright.dev)
-- The system works best with standard web elements
-
-### File Locations:
-
-- **Generated tests**: `tests/generated/`
-- **Screenshots**: `screenshots/`
-- **Scenarios config**: `test-data/scenarios.json`
-
----
+**Use clear element names:**
+- ✅ `"Verify email field accepts input"`
+- ❌ `"Verify input works"`
 
 ## Project Structure
 
 ```
-├── .github/workflows/prompts/   # MCP prompt templates
-│   ├── explore_and_generate.prompt.md     # Website exploration prompts
-│   └── generate_from_scenarios.prompt.md  # Scenario generation prompts
-├── src/                          # TypeScript source files
-│   ├── mcp-client.ts            # MCP client integration
-│   ├── test-generator.ts        # Test generation logic
-│   ├── test-data-manager.ts     # Test data management
-│   ├── verify-parser.ts         # Natural language parser
-│   └── prompt-loader.ts         # Prompt template loader
-├── tests/
-│   ├── generated/               # Auto-generated test files
-│   └── examples/                # Example test files
-├── test-data/
-│   ├── scenarios.json           # Test scenarios configuration
-│   └── fixtures.json            # Test data fixtures
-├── scripts/
-│   └── generate-tests.js        # Main generation script
-├── screenshots/                 # Test screenshots
-└── mcp-config.json             # MCP server configuration
+├── src/                    # TypeScript source
+│   ├── mcp-client.ts      # MCP integration
+│   ├── test-generator.ts  # Test creation logic
+│   └── verify-parser.ts   # Natural language parsing
+├── tests/generated/       # Your generated tests
+├── test-data/            # Scenario configurations
+├── scripts/              # Generation scripts
+└── mcp-config.json      # MCP server setup
 ```
-
-## Enhanced Features
-
-### AI-Powered Prompt System
-
-The system now includes sophisticated AI prompts that guide the MCP server to generate higher-quality tests:
-
-- **Exploration Prompts**: Guide autonomous website exploration and comprehensive test generation
-- **Scenario Prompts**: Convert natural language verify statements into robust test cases
-- **Template Variables**: Dynamic prompt customization with URL, test names, and scenarios
-
----
 
 ## Troubleshooting
 
-**Build the project first:**
-
+**First time setup:**
 ```bash
+npm install
 npm run build
+npx playwright install
 ```
 
-**Clean generated tests:**
-
+**Clean slate:**
 ```bash
-Remove-Item tests/generated/*.spec.ts -Force  # Windows
-rm tests/generated/*.spec.ts                  # Linux/Mac
+# Remove all generated tests
+Remove-Item tests/generated/*.spec.ts -Force
 ```
 
-**Check MCP server connection:**
-The system uses `@modelcontextprotocol/server-filesystem` to analyze files and generate tests.
-
-That's it! The system handles all the complex MCP integration, element detection, and Playwright test code generation automatically.
+**MCP not working?**
+The system uses `@playwright/mcp` to actually browse websites. Make sure it's installed:
+```bash
+npm install @playwright/mcp@latest
+```
