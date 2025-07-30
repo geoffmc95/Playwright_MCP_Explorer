@@ -159,8 +159,6 @@ I welcome contributions! Please see our Contributing Guide for details.<br/>
 4. Push to the branch (git push origin feature/amazing-feature)<br/>
 5. Open a Pull Request<br/>
    
-# License 
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 # Acknowledgments <br/>
 -**Playwright** - For the excellent browser automation framework<br/>
